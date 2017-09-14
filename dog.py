@@ -53,7 +53,7 @@ class StdOutListener(tweepy.StreamListener):
 
 ##################### reddit get image from dogpictures subreddit ###################################
 def get_img():
-	subreddit = reddit.subreddit('dogpictures+dogswearinghats+puppies+Happydogs+blop')
+	subreddit = reddit.subreddit('dogpictures+dogswearinghats+puppies+dogswitheyebrows')
 	
 	# fix to parse all imgur options (for now just skip imgur)
 	# (https://inventwithpython.com/blog/2013/09/30/downloading-imgur-posts-linked-from-reddit-with-python/)
