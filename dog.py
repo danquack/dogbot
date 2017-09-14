@@ -29,12 +29,12 @@ api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 class StdOutListener(tweepy.StreamListener):
 	def on_data(self, data):
 		decoded = json.loads(data)
-		result = decoded['text'].split()
-		if 'dog' in result[1]:
+		result = decoded['text']
+		if 'dog' in result:
 			try:
 				while True:
 					file = get_img()
-					if os.stat(file).st_size < 5000000:
+					if os.stat(file).st_size < 3072000:
 						break
 			except OSError as e:
 				print e
@@ -43,7 +43,7 @@ class StdOutListener(tweepy.StreamListener):
 			tweetId = decoded['id_str']
 			api.update_with_media(file, status=update, in_reply_to_status_id=tweetId)
 			os.remove(file)
-			time.sleep(60)
+			#time.sleep(36)
 			return True
 
 	def on_error(self, status):
