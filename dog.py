@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import tweepy, json, requests, datetime, os, time, re
+from urlparse import urlparse
+from os.path import splitext
 #from our keys module (keys.py), import the keys dictionary
 from keys import keys
 import praw
@@ -32,6 +34,7 @@ class StdOutListener(tweepy.StreamListener):
 		tweet_body = decoded['text']
 		# remove twitter handles and just check tweet for 'dog'
 		just_tweet = re.sub(r'(?<=^|(?<=[^a-zA-Z0-9-_\.]))@([A-Za-z]+[A-Za-z0-9_]+)','', tweet_body)
+		#if "dog" is found in the tweet, call get_img until less than 3072 kb (limit for tweepy?)
 		if 'dog' in just_tweet.strip().lower():
 			try:
 				while True:
@@ -51,21 +54,35 @@ class StdOutListener(tweepy.StreamListener):
 	def on_error(self, status):
 		print status
 
-##################### reddit get image from dogpictures subreddit ###################################
+##################### reddit get image from dog subreddits ###################################
+# Not the best/secure way to get the extension
+# Change in future to alternative method
+def get_ext(url):
+    parsed = urlparse(url)
+    root, ext = splitext(parsed.path)
+    return ext
+
+# get random image from list of subreddits
+
 def get_img():
 	subreddit = reddit.subreddit('dogpictures+dogswearinghats+puppies+dogswitheyebrows')
 	
 	# fix to parse all imgur options (for now just skip imgur)
 	# (https://inventwithpython.com/blog/2013/09/30/downloading-imgur-posts-linked-from-reddit-with-python/)
-	while True:
-		rand = subreddit.random().url
-		if "imgur.com" not in rand:
-			break
-	img_data = requests.get(rand).content
-	filename = "img-" +str(date) + '.jpg'
-	with open(filename, 'wb') as handler:
-		handler.write(img_data)
-	return filename
+	try:
+		while True:
+			rand = subreddit.random().url
+			if "imgur.com" not in rand:
+				break
+		
+		img_data = requests.get(rand).content
+		ext = get_ext(rand)
+		filename = "img-" +str(date) + ext
+		with open(filename, 'wb') as handler:
+			handler.write(img_data)
+		return filename
+	except Exception as e:
+		print e
 
 ##################### start listener ###################################
 if __name__ == '__main__':
