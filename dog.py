@@ -85,10 +85,12 @@ def get_img():
 		print e
 
 ##################### start listener ###################################
-if __name__ == '__main__':
-    listener = StdOutListener()
-    auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
-    auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
-    stream = tweepy.Stream(auth, listener)
-    stream.filter(track=['@ireplydogs'])
+def main():
+	listener = StdOutListener()
+	auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
+	auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+	stream = tweepy.Stream(auth, listener)
+	stream.filter(track=['@ireplydogs'])
 
+if __name__ == '__main__':
+	main()
