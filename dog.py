@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import tweepy, json, requests, datetime, os, time
+import tweepy, json, requests, datetime, os, time, re
 #from our keys module (keys.py), import the keys dictionary
 from keys import keys
 import praw
@@ -29,8 +29,10 @@ api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 class StdOutListener(tweepy.StreamListener):
 	def on_data(self, data):
 		decoded = json.loads(data)
-		result = decoded['text']
-		if 'dog' in result:
+		tweet_body = decoded['text']
+		# remove twitter handles and just check tweet for 'dog'
+		just_tweet = re.sub(r'(?<=^|(?<=[^a-zA-Z0-9-_\.]))@([A-Za-z]+[A-Za-z0-9_]+)','', result)
+		if 'dog' in just_tweet.strip():
 			try:
 				while True:
 					file = get_img()
