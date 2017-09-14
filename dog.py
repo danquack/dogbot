@@ -31,7 +31,7 @@ class StdOutListener(tweepy.StreamListener):
 		decoded = json.loads(data)
 		tweet_body = decoded['text']
 		# remove twitter handles and just check tweet for 'dog'
-		just_tweet = re.sub(r'(?<=^|(?<=[^a-zA-Z0-9-_\.]))@([A-Za-z]+[A-Za-z0-9_]+)','', result)
+		just_tweet = re.sub(r'(?<=^|(?<=[^a-zA-Z0-9-_\.]))@([A-Za-z]+[A-Za-z0-9_]+)','', tweet_body)
 		if 'dog' in just_tweet.strip():
 			try:
 				while True:
