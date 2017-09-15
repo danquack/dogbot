@@ -73,12 +73,12 @@ def get_img():
 	try:
 		while True:
 			rand = reddit.subreddit('dogpictures+puppies+dogswearinghats+lookatmydog').random().url
-			ext = get_ext()
-			if "imgur.com" and "gfycat.com" not in rand and ext:
-				break
-
+			ext = get_ext(rand)
+			if "imgur.com" and "gfycat.com" not in rand:
+				if ext:
+					break
 		img_data = requests.get(rand).content
-		filename = "img-" +str(date) + ext
+		filename = "img-" + str(date) + ext
 		with open(filename, 'wb') as handler:
 			handler.write(img_data)
 		return filename
