@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-import tweepy, json, requests, datetime, os, time, re
+import tweepy, json, requests, datetime, os, time, re, praw
 from urlparse import urlparse
 from os.path import splitext
 #from our keys module (keys.py), import the keys dictionary
 from keys import keys
-import praw
+
 
 date = datetime.datetime.now().strftime("%m%d%Y-%H:%M:%S")
 
@@ -36,14 +36,13 @@ class StdOutListener(tweepy.StreamListener):
 		just_tweet = re.sub(r'(?<=^|(?<=[^a-zA-Z0-9-_\.]))@([A-Za-z]+[A-Za-z0-9_]+)','', tweet_body)
 		#if "dog" is found in the tweet, call get_img until less than 3072 kb (limit for tweepy?)
 		if 'dog' in just_tweet.strip().lower():
-			try:
-				while True:
+			while True:
+				try:
 					file = get_img()
 					if os.stat(file).st_size < 3072000:
 						break
-			except Exception as e:
-				print e
-				pass
+				except Exception as e:
+					continue
 
 			update = '@%s' % (decoded['user']['screen_name'])
 			tweetId = decoded['id_str']
@@ -56,6 +55,7 @@ class StdOutListener(tweepy.StreamListener):
 		print status
 
 ##################### reddit get image from dog subreddits ###################################
+
 # Not the best/secure way to get the extension
 # Change in future to alternative method
 def get_ext(url):
@@ -66,25 +66,27 @@ def get_ext(url):
 # get random image from list of subreddits
 
 def get_img():
-	#subreddit = reddit.subreddit('dogpictures+puppies')
 	
-	# fix to parse all imgur options (for now just skip imgur)
+	# fix to parse all imgur options (for now just skip imgur and gfycat)
 	# (https://inventwithpython.com/blog/2013/09/30/downloading-imgur-posts-linked-from-reddit-with-python/)
-	try:
-		while True:
+	while True:
+		try:
 			rand = reddit.subreddit('dogpictures+puppies+dogswearinghats+lookatmydog').random().url
 			ext = get_ext(rand)
-			if "imgur.com" and "gfycat.com" not in rand:
-				if ext:
+			if "imgur.com" and "gfycat.com" not in rand: #skip imgur and gfycat for now
+				if ext: #if extension is not empty
+					img_data = requests.get(rand).content #get data
+					filename = "img-" + str(date) + ext
+					with open(filename, 'wb') as handler: #write data
+						handler.write(img_data)
 					break
-		img_data = requests.get(rand).content
-		filename = "img-" + str(date) + ext
-		with open(filename, 'wb') as handler:
-			handler.write(img_data)
-		return filename
-	except Exception as e:
-		print e
-		pass
+		except Exception as e:
+			continue
+
+	return filename #return filename of image 
+
+		
+
 
 ##################### start listener ###################################
 def main():
@@ -92,7 +94,8 @@ def main():
 	auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 	auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 	stream = tweepy.Stream(auth, listener)
-	stream.filter(track=['@ireplydogs'])
+	stream.filter(track=['@ireplydogs']) #filter by twitter handle (change to reflect your own account)
 
 if __name__ == '__main__':
 	main()
+
