@@ -73,15 +73,16 @@ def get_img():
 		try:
 			rand = reddit.subreddit('dogpictures+puppies+dogswearinghats+lookatmydog').random().url
 			ext = get_ext(rand)
-			if "imgur.com" and "gfycat.com" not in rand: #skip imgur and gfycat for now
-				if ext: #if extension is not empty
+			if "imgur.com" and "gfycat.com" and "youtube.com" not in rand: #skip imgur and gfycat for now
+				if ext: #if extension is not empty (poor way of checking... need to fix)
 					img_data = requests.get(rand).content #get data
 					filename = "img-" + str(date) + ext
 					with open(filename, 'wb') as handler: #write data
 						handler.write(img_data)
 					break
+			time.sleep(2) #only one request per 2 seconds for Reddit
 		except Exception as e:
-			continue
+			continue #retry
 
 	return filename #return filename of image 
 
