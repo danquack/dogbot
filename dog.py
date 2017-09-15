@@ -41,8 +41,9 @@ class StdOutListener(tweepy.StreamListener):
 					file = get_img()
 					if os.stat(file).st_size < 3072000:
 						break
-			except OSError as e:
+			except Exception as e:
 				print e
+				pass
 
 			update = '@%s' % (decoded['user']['screen_name'])
 			tweetId = decoded['id_str']
@@ -58,31 +59,32 @@ class StdOutListener(tweepy.StreamListener):
 # Not the best/secure way to get the extension
 # Change in future to alternative method
 def get_ext(url):
-    parsed = urlparse(url)
-    root, ext = splitext(parsed.path)
-    return ext
+	parsed = urlparse(url)
+	root, ext = splitext(parsed.path)
+	return ext
 
 # get random image from list of subreddits
 
 def get_img():
-	subreddit = reddit.subreddit('dogpictures+dogswearinghats+puppies+dogswitheyebrows')
+	#subreddit = reddit.subreddit('dogpictures+puppies')
 	
 	# fix to parse all imgur options (for now just skip imgur)
 	# (https://inventwithpython.com/blog/2013/09/30/downloading-imgur-posts-linked-from-reddit-with-python/)
 	try:
 		while True:
-			rand = subreddit.random().url
-			if "imgur.com" not in rand:
+			rand = reddit.subreddit('dogpictures+puppies+dogswearinghats+lookatmydog').random().url
+			ext = get_ext()
+			if "imgur.com" and "gfycat.com" not in rand and ext:
 				break
-		
+
 		img_data = requests.get(rand).content
-		ext = get_ext(rand)
 		filename = "img-" +str(date) + ext
 		with open(filename, 'wb') as handler:
 			handler.write(img_data)
 		return filename
 	except Exception as e:
 		print e
+		pass
 
 ##################### start listener ###################################
 def main():
