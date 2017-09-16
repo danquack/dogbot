@@ -59,7 +59,7 @@ class StdOutListener(tweepy.StreamListener):
 						os.remove(file)
 				except Exception as e:
 					continue
-			try:
+			try: #need to test with send_tweet()
 				update = '@%s' % (user)
 				api.update_with_media(file, status=update, in_reply_to_status_id=tweetId)
 				os.remove(file)
