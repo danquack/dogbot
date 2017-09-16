@@ -78,6 +78,7 @@ class StdOutListener(tweepy.StreamListener):
 				except Exception as e:
 					continue
 			try:
+				print("test")
 				update = '@%s' % (user)
 				api.update_with_media(file, status=update, in_reply_to_status_id=tweetId)	
 				os.remove(file)
@@ -118,41 +119,37 @@ def get_rand_img():
 		while True:
 			try:
 				rand = reddit.subreddit('dogpictures+puppies+dogswearinghats+lookatmydog').random().url
-				ext = get_ext(rand)
+				#ext = get_ext(rand)
 				if "imgur.com" and "gfycat.com" and "youtube.com" not in rand: #skip imgur and gfycat for now
-					if ext: #if extension is not empty (poor way of checking... need to fix
-						jsondata = json.loads(resp.content)
-						img_filename = download_img(jsondata['message'])
-						break
+				#if extension is not empty (poor way of checking... need to fix
+					jsondata = json.loads(resp.content)
+					img_filename = download_img(jsondata['message'])
+					break
 				time.sleep(2) #only one request per 2 seconds for Reddit
 			except Exception as e:
 				continue #retry
 		return img_filename #return filename of image 
 	else: #use dog.ceo API if odd
-		while True:
-			try:
-				url = "https://dog.ceo/api/breeds/image/random"
-				resp = requests.get(url)
-				if resp.ok: #check response ok
-					jsondata = json.loads(resp.content)
-					img_filename = download_img(jsondata['message'])
-					break
-			except Exception as e:
-				continue #retry
-		return img_filename #return filename of image
-		
-
-def get_breed_img(breed):
-	while True:
 		try:
-			url = "https://dog.ceo/api/breed/" + breed + "/images/random"
+			url = "https://dog.ceo/api/breeds/image/random"
 			resp = requests.get(url)
 			if resp.ok: #check response ok
 				jsondata = json.loads(resp.content)
 				img_filename = download_img(jsondata['message'])
-				break
 		except Exception as e:
-			continue #retry
+			return False
+		return img_filename #return filename of image
+		
+
+def get_breed_img(breed):
+	try:
+		url = "https://dog.ceo/api/breed/" + breed + "/images/random"
+		resp = requests.get(url)
+		if resp.ok: #check response ok
+			jsondata = json.loads(resp.content)
+			img_filename = download_img(jsondata['message'])
+	except Exception as e:
+		print e
 
 	return img_filename #return filename of image
 
