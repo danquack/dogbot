@@ -78,7 +78,6 @@ class StdOutListener(tweepy.StreamListener):
 				except Exception as e:
 					continue
 			try:
-				print("test")
 				update = '@%s' % (user)
 				api.update_with_media(file, status=update, in_reply_to_status_id=tweetId)	
 				os.remove(file)
@@ -116,19 +115,19 @@ def get_rand_img():
 	if(random_num % 2 == 0): #if even use reddit, if odd use dog.ceo API (maybe change?)
 	# fix to parse all options (for now just skip imgur and gfycat)
 	# (https://inventwithpython.com/blog/2013/09/30/downloading-imgur-posts-linked-from-reddit-with-python/)
-		while True:
-			try:
-				rand = reddit.subreddit('dogpictures+puppies+dogswearinghats+lookatmydog').random().url
-				#ext = get_ext(rand)
-				if "imgur.com" and "gfycat.com" and "youtube.com" not in rand: #skip imgur and gfycat for now
-				#if extension is not empty (poor way of checking... need to fix
-					jsondata = json.loads(resp.content)
-					img_filename = download_img(jsondata['message'])
-					break
-				time.sleep(2) #only one request per 2 seconds for Reddit
-			except Exception as e:
-				continue #retry
-		return img_filename #return filename of image 
+		try:
+			rand = reddit.subreddit('dogpictures+puppies+dogswearinghats+lookatmydog').random().url
+			ext = get_ext(rand)
+			print(ext)
+			if "imgur.com" and "gfycat.com" and "youtube.com" not in rand: #skip imgur and gfycat for now
+			#if extension is not empty (poor way of checking... need to fix
+				jsondata = json.loads(resp.content)
+				img_filename = download_img(jsondata['message'])
+				if ext:
+					return img_filename
+			time.sleep(2) #only one request per 2 seconds for Reddit
+		except Exception as e:
+			return False 
 	else: #use dog.ceo API if odd
 		try:
 			url = "https://dog.ceo/api/breeds/image/random"
@@ -148,6 +147,7 @@ def get_breed_img(breed):
 		if resp.ok: #check response ok
 			jsondata = json.loads(resp.content)
 			img_filename = download_img(jsondata['message'])
+
 	except Exception as e:
 		print e
 
@@ -156,8 +156,8 @@ def get_breed_img(breed):
 def download_img(url):
 	try:
 		img_data = requests.get(url).content #get data
-		ext = get_ext(url)
-		filename = "img-" + str(date) + ext
+		exten = get_ext(url)
+		filename = "img-" + str(date) + exten
 		with open(filename, 'wb') as handler: #write data
 			handler.write(img_data)
 		return filename
