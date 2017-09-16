@@ -4,7 +4,7 @@ from urlparse import urlparse
 from os.path import splitext
 #from our keys module (keys.py), import the keys dictionary
 from keys import keys
-
+from random import randint
 
 date = datetime.datetime.now().strftime("%m%d%Y-%H:%M:%S")
 
@@ -41,6 +41,8 @@ class StdOutListener(tweepy.StreamListener):
 					file = get_img()
 					if os.stat(file).st_size < 3072000:
 						break
+					else:
+						os.remove(file)
 				except Exception as e:
 					continue
 
@@ -66,26 +68,44 @@ def get_ext(url):
 # get random image from list of subreddits
 
 def get_img():
-	
+	random_num = randint(0,1000)
+	if(random_num % 2 == 0): #if even use reddit, if odd use dog.ceo API (maybe change?)
+		print(random_num)
 	# fix to parse all imgur options (for now just skip imgur and gfycat)
 	# (https://inventwithpython.com/blog/2013/09/30/downloading-imgur-posts-linked-from-reddit-with-python/)
-	while True:
-		try:
-			rand = reddit.subreddit('dogpictures+puppies+dogswearinghats+lookatmydog').random().url
-			ext = get_ext(rand)
-			if "imgur.com" and "gfycat.com" and "youtube.com" not in rand: #skip imgur and gfycat for now
-				if ext: #if extension is not empty (poor way of checking... need to fix)
-					img_data = requests.get(rand).content #get data
+		while True:
+			try:
+				rand = reddit.subreddit('dogpictures+puppies+dogswearinghats+lookatmydog').random().url
+				ext = get_ext(rand)
+				if "imgur.com" and "gfycat.com" and "youtube.com" not in rand: #skip imgur and gfycat for now
+					if ext: #if extension is not empty (poor way of checking... need to fix)
+						img_data = requests.get(rand).content #get data
+						filename = "img-" + str(date) + ext
+						with open(filename, 'wb') as handler: #write data
+							handler.write(img_data)
+						break
+				time.sleep(2) #only one request per 2 seconds for Reddit
+			except Exception as e:
+				continue #retry
+
+		return filename #return filename of image 
+	else: #use dog.ceo API if odd
+		while True:
+                        try:
+                                url = "https://dog.ceo/api/breeds/image/random"
+				resp = requests.get(url)
+                                if resp.ok: #check response ok
+					jsondata = json.loads(resp.content)
+					img_data = requests.get(jsondata['message']).content #get data
+					ext = get_ext(jsondata['message'])
 					filename = "img-" + str(date) + ext
 					with open(filename, 'wb') as handler: #write data
 						handler.write(img_data)
 					break
-			time.sleep(2) #only one request per 2 seconds for Reddit
-		except Exception as e:
-			continue #retry
+                        except Exception as e:
+                                continue #retry
 
-	return filename #return filename of image 
-
+                return filename #return filename of image
 		
 
 
