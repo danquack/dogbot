@@ -27,36 +27,79 @@ auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 
+########################## Read breeds ###########################################
+with open("breeds.txt", "r") as f:
+         breed_list = f.read().splitlines()
+breeds = re.compile("|".join(breed_list))
+
 ########################### Twitter listener #######################################
 class StdOutListener(tweepy.StreamListener):
 	def on_data(self, data):
+		# get tweet data
 		decoded = json.loads(data)
 		tweet_body = decoded['text']
-		# remove twitter handles and just check tweet for 'dog'
+		user = decoded['user']['screen_name']
+		tweetId = decoded['id_str']
+
+		# remove twitter handles, just get tweet body then check if a breed is mentioned
 		just_tweet = re.sub(r'(?<=^|(?<=[^a-zA-Z0-9-_\.]))@([A-Za-z]+[A-Za-z0-9_]+)','', tweet_body)
-		#if "dog" is found in the tweet, call get_img until less than 3072 kb (limit for tweepy?)
-		if 'dog' in just_tweet.strip().lower():
+		breed_in_tweet = breeds.search(just_tweet.lower())
+
+		# if breed found in tweet, get random picture of breed and check size 
+		# else if dog is in tweet, get random picture of dog and check size
+		# else pass
+		
+		if breed_in_tweet:
+			while True:
+                                try:
+					file = get_breed_img(breed_in_tweet.group(0))
+					if os.stat(file).st_size < 3072000: #make this into function?
+						break
+					else:
+						os.remove(file)
+				except Exception as e:
+					continue
+			try:
+				update = '@%s' % (user)
+				api.update_with_media(file, status=update, in_reply_to_status_id=tweetId)
+				os.remove(file)
+			except Exception as e:
+				return False
+	
+			return True
+		elif 'dog' in just_tweet.strip().lower():
 			while True:
 				try:
-					file = get_img()
+					file = get_rand_img()
 					if os.stat(file).st_size < 3072000:
 						break
 					else:
 						os.remove(file)
 				except Exception as e:
 					continue
+			try:
+				update = '@%s' % (user)
+				api.update_with_media(file, status=update, in_reply_to_status_id=tweetId)	
+				os.remove(file)
+				#send_tweet(file, user, tweetId)
+			except Exception as e:
+				print e
 
-			update = '@%s' % (decoded['user']['screen_name'])
-			tweetId = decoded['id_str']
-			api.update_with_media(file, status=update, in_reply_to_status_id=tweetId)
-			os.remove(file)
-			#time.sleep(36)
 			return True
+		else:
+			pass
+		#time.sleep(30)
 
 	def on_error(self, status):
 		print status
 
-##################### reddit get image from dog subreddits ###################################
+
+#################### send tweet ###############################################
+def send_tweet(file, user, tweetId):
+	update = '@%s' % (user)
+	api.update_with_media(file, status=update, in_reply_to_status_id=tweetId)
+	os.remove(file)
+##################### get image from sources ###################################
 
 # Not the best/secure way to get the extension
 # Change in future to alternative method
@@ -67,47 +110,62 @@ def get_ext(url):
 
 # get random image from list of subreddits
 
-def get_img():
+def get_rand_img():
 	random_num = randint(0,1000)
 	if(random_num % 2 == 0): #if even use reddit, if odd use dog.ceo API (maybe change?)
-		print(random_num)
-	# fix to parse all imgur options (for now just skip imgur and gfycat)
+	# fix to parse all options (for now just skip imgur and gfycat)
 	# (https://inventwithpython.com/blog/2013/09/30/downloading-imgur-posts-linked-from-reddit-with-python/)
 		while True:
 			try:
 				rand = reddit.subreddit('dogpictures+puppies+dogswearinghats+lookatmydog').random().url
 				ext = get_ext(rand)
 				if "imgur.com" and "gfycat.com" and "youtube.com" not in rand: #skip imgur and gfycat for now
-					if ext: #if extension is not empty (poor way of checking... need to fix)
-						img_data = requests.get(rand).content #get data
-						filename = "img-" + str(date) + ext
-						with open(filename, 'wb') as handler: #write data
-							handler.write(img_data)
+					if ext: #if extension is not empty (poor way of checking... need to fix
+						jsondata = json.loads(resp.content)
+						img_filename = download_img(jsondata['message'])
 						break
 				time.sleep(2) #only one request per 2 seconds for Reddit
 			except Exception as e:
 				continue #retry
-
-		return filename #return filename of image 
+		return img_filename #return filename of image 
 	else: #use dog.ceo API if odd
 		while True:
-                        try:
-                                url = "https://dog.ceo/api/breeds/image/random"
+			try:
+				url = "https://dog.ceo/api/breeds/image/random"
 				resp = requests.get(url)
-                                if resp.ok: #check response ok
+				if resp.ok: #check response ok
 					jsondata = json.loads(resp.content)
-					img_data = requests.get(jsondata['message']).content #get data
-					ext = get_ext(jsondata['message'])
-					filename = "img-" + str(date) + ext
-					with open(filename, 'wb') as handler: #write data
-						handler.write(img_data)
+					img_filename = download_img(jsondata['message'])
 					break
-                        except Exception as e:
-                                continue #retry
-
-                return filename #return filename of image
+			except Exception as e:
+				continue #retry
+		return img_filename #return filename of image
 		
 
+def get_breed_img(breed):
+	while True:
+		try:
+			url = "https://dog.ceo/api/breed/" + breed + "/images/random"
+			resp = requests.get(url)
+			if resp.ok: #check response ok
+				jsondata = json.loads(resp.content)
+				img_filename = download_img(jsondata['message'])
+				break
+		except Exception as e:
+			continue #retry
+
+	return img_filename #return filename of image
+
+def download_img(url):
+	try:
+		img_data = requests.get(url).content #get data
+		ext = get_ext(url)
+		filename = "img-" + str(date) + ext
+		with open(filename, 'wb') as handler: #write data
+			handler.write(img_data)
+		return filename
+	except Exception as e:
+		return
 
 ##################### start listener ###################################
 def main():
