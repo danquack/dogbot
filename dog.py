@@ -50,42 +50,19 @@ class StdOutListener(tweepy.StreamListener):
 		# else pass
 		
 		if breed_in_tweet:
-			while True:
-                                try:
-					file = get_breed_img(breed_in_tweet.group(0))
-					if os.stat(file).st_size < 3072000: #make this into function?
-						break
-					else:
-						os.remove(file)
-				except Exception as e:
-					continue
-			try: #need to test with send_tweet()
-				update = '@%s' % (user)
-				api.update_with_media(file, status=update, in_reply_to_status_id=tweetId)
-				os.remove(file)
-			except Exception as e:
-				return False
-	
-			return True
-		elif 'dog' in just_tweet.strip().lower():
-			while True:
-				try:
-					file = get_rand_img()
-					if os.stat(file).st_size < 3072000:
-						break
-					else:
-						os.remove(file)
-				except Exception as e:
-					continue
 			try:
-				update = '@%s' % (user)
-				api.update_with_media(file, status=update, in_reply_to_status_id=tweetId)	
-				os.remove(file)
-				#send_tweet(file, user, tweetId)
+				file = get_breed_img(breed_in_tweet.group(0))
+				if send_tweet(file, user, tweetId):
+					return True
 			except Exception as e:
 				print e
-
-			return True
+		elif 'dog' in just_tweet.strip().lower():
+			try:
+				file = get_rand_img()
+				if send_tweet(file, user, tweetId):
+					return True
+			except Exception as e:
+				print e
 		else:
 			pass
 		#time.sleep(30)
@@ -96,9 +73,13 @@ class StdOutListener(tweepy.StreamListener):
 
 #################### send tweet ###############################################
 def send_tweet(file, user, tweetId):
-	update = '@%s' % (user)
-	api.update_with_media(file, status=update, in_reply_to_status_id=tweetId)
-	os.remove(file)
+	try:
+		update = '@%s' % (user)
+		api.update_with_media(file, status=update, in_reply_to_status_id=tweetId)
+		os.remove(file)
+		return True
+	except Exception as e:
+		print e
 ##################### get image from sources ###################################
 
 # Not the best/secure way to get the extension
@@ -115,43 +96,45 @@ def get_rand_img():
 	if(random_num % 2 == 0): #if even use reddit, if odd use dog.ceo API (maybe change?)
 	# fix to parse all options (for now just skip imgur and gfycat)
 	# (https://inventwithpython.com/blog/2013/09/30/downloading-imgur-posts-linked-from-reddit-with-python/)
-		try:
-			rand = reddit.subreddit('dogpictures+puppies+dogswearinghats+lookatmydog').random().url
-			ext = get_ext(rand)
-			print(ext)
-			if "imgur.com" and "gfycat.com" and "youtube.com" not in rand: #skip imgur and gfycat for now
-			#if extension is not empty (poor way of checking... need to fix
-				jsondata = json.loads(resp.content)
-				img_filename = download_img(jsondata['message'])
-				if ext:
-					return img_filename
-			time.sleep(2) #only one request per 2 seconds for Reddit
-		except Exception as e:
-			return False 
+		while True:
+				try:
+					reddit_url = reddit.subreddit('dogpictures+puppies+dogswearinghats').random().url
+					if "imgur.com" and "gfycat.com" and "youtube.com" not in reddit_url: #skip imgur and gfycat for now
+					#if extension is not empty (poor way of checking... need to fix
+						img_filename, exten = download_img(reddit_url)
+						if img_filename and exten:
+							return img_filename
+					time.sleep(2) #only one request per 2 seconds for Reddit
+				except Exception as e:
+					print e
+					return False 
+
 	else: #use dog.ceo API if odd
-		try:
-			url = "https://dog.ceo/api/breeds/image/random"
-			resp = requests.get(url)
-			if resp.ok: #check response ok
-				jsondata = json.loads(resp.content)
-				img_filename = download_img(jsondata['message'])
-		except Exception as e:
-			return False
-		return img_filename #return filename of image
-		
+
+		while True:
+			try:
+				url = "https://dog.ceo/api/breeds/image/random"
+				resp = requests.get(url)
+				if resp.ok: #check response ok
+					jsondata = json.loads(resp.content)
+					img_filename, exten = download_img(jsondata['message'])
+					if exten and img_filename:
+						return img_filename #return filename of image
+			except Exception as e:
+				return False
 
 def get_breed_img(breed):
-	try:
-		url = "https://dog.ceo/api/breed/" + breed + "/images/random"
-		resp = requests.get(url)
-		if resp.ok: #check response ok
-			jsondata = json.loads(resp.content)
-			img_filename = download_img(jsondata['message'])
-
-	except Exception as e:
-		print e
-
-	return img_filename #return filename of image
+	while True:
+			try:
+				url = "https://dog.ceo/api/breed/" + breed + "/images/random"
+				resp = requests.get(url)
+				if resp.ok: #check response ok
+					jsondata = json.loads(resp.content)
+					img_filename, exten = download_img(jsondata['message'])
+					if exten and img_filename:
+						return img_filename #return filename of image
+			except Exception as e:
+				return False
 
 def download_img(url):
 	try:
@@ -160,9 +143,14 @@ def download_img(url):
 		filename = "img-" + str(date) + exten
 		with open(filename, 'wb') as handler: #write data
 			handler.write(img_data)
-		return filename
+		if os.stat(filename).st_size < 3072000: #make this into function?
+			return filename, exten
+		else:
+			os.remove(filename)
+			return False
+		
 	except Exception as e:
-		return
+		return False
 
 ##################### start listener ###################################
 def main():
