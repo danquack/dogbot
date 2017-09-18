@@ -43,7 +43,8 @@ class StdOutListener(tweepy.StreamListener):
 
 		# remove twitter handles, just get tweet body then check if a breed is mentioned
 		just_tweet = re.sub(r'(?<=^|(?<=[^a-zA-Z0-9-_\.]))@([A-Za-z]+[A-Za-z0-9_]+)','', tweet_body)
-		breed_in_tweet = breeds.search(just_tweet.lower())
+		just_tweet_remove_period = just_tweet.replace(".","")
+		breed_in_tweet = breeds.search(just_tweet_remove_period.lower())
 
 		# if breed found in tweet, get random picture of breed and check size 
 		# else if dog is in tweet, get random picture of dog and check size
@@ -125,8 +126,9 @@ def get_rand_img():
 
 def get_breed_img(breed):
 	while True:
-			try:
-				url = "https://dog.ceo/api/breed/" + breed + "/images/random"
+			try:	
+				breed_nospaces = breed.replace(" ","")
+				url = "https://dog.ceo/api/breed/" + breed_nospaces + "/images/random"
 				resp = requests.get(url)
 				if resp.ok: #check response ok
 					jsondata = json.loads(resp.content)
