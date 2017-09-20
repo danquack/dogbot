@@ -1,6 +1,6 @@
 # dogbot
 
-A Twitter bot that responds to users with picture of dogs. If a user tweets at the bot account with the word dog in the tweet, it will respond with a random dog picture (from a few dog subreddits and dog.ceo API).
+A Twitter bot that responds to users with picture of dogs. If a user tweets at the bot account with the word dog in the tweet, it will respond with a random dog picture (from a few dog subreddits and dog.ceo API). Also, if a user tweets a specific dog breed at the bot it will respond with an image of that breed (sub-breeds coming soon?).
 
 
 There are a few things you will need before deploying this bot
