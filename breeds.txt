@@ -10,7 +10,7 @@ akita
 briard
 hound
 pinscher
-bullterrier
+bull terrier
 malinois
 setter
 lhasa
@@ -36,7 +36,7 @@ appenzeller
 coonhound
 keeshond
 shiba
-germanshepherd
+german shepherd
 weimaraner
 pug
 schipperke
@@ -54,7 +54,7 @@ maltese
 clumber
 eskimo
 terrier
-stbernard
+st bernard
 retriever
 schnauzer
 pembroke
@@ -63,7 +63,7 @@ bouvier
 dingo
 mastiff
 malamute
-mexicanhairless
+mexican hairless
 borzoi
 elkhound
 ridgeback
