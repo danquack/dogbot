@@ -8,11 +8,8 @@ from random import randint
 
 date = datetime.datetime.now().strftime("%m%d%Y-%H:%M:%S")
 
-##################### Connect to reddit and twitter #################################
-#																					#
-# Make sure to enter your credentials in the keys.py file                           #
-#																					#
-#																					#
+##################### Reddit and Twitter #################################										#
+# Make sure to enter your credentials are in the keys.py file                       #											#
 #####################################################################################
 reddit = praw.Reddit(client_id=keys['reddit_clientID'], client_secret=keys['reddit_clientsec'],
                      password=keys['reddit_pass'], user_agent='dog bot',
@@ -27,14 +24,14 @@ auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 
-########################## Read breeds ###########################################
+########################## Read breeds.txt ###########################################
 with open("breeds.txt", "r") as f:
          breed_list = f.read().splitlines()
-breeds = re.compile("|".join(breed_list))
+breeds = re.compile("|".join(breed_list)) #for checking if breeds are in tweet
 
-########################### Twitter listener #######################################
+########################### listener #######################################
 class StdOutListener(tweepy.StreamListener):
-	def on_data(self, data):
+	def on_data(self, data): #upon receiving data (tweet mentions username)
 		# get tweet data
 		decoded = json.loads(data)
 		tweet_body = decoded['text']
@@ -48,18 +45,18 @@ class StdOutListener(tweepy.StreamListener):
 
 		# if breed found in tweet, get random picture of breed and check size 
 		# else if dog is in tweet, get random picture of dog and check size
-		# else pass
+		# else dont do anything
 		
 		if breed_in_tweet:
 			try:
-				file = get_breed_img(breed_in_tweet.group(0))
-				if send_tweet(file, user, tweetId):
+				file = get_breed_img(breed_in_tweet.group(0)) #call get breed image, returns filename
+				if send_tweet(file, user, tweetId): #try to send the tweet
 					return True
 			except Exception as e:
 				print e
 		elif 'dog' in just_tweet.strip().lower():
 			try:
-				file = get_rand_img()
+				file = get_rand_img() #get random image, returns filename
 				if send_tweet(file, user, tweetId):
 					return True
 			except Exception as e:
@@ -76,14 +73,14 @@ class StdOutListener(tweepy.StreamListener):
 def send_tweet(file, user, tweetId):
 	try:
 		update = '@%s' % (user)
-		api.update_with_media(file, status=update, in_reply_to_status_id=tweetId)
-		os.remove(file)
+		api.update_with_media(file, status=update, in_reply_to_status_id=tweetId) #send image @<user> (tweetId to reply to correct tweet)
+		os.remove(file) 
 		return True
 	except Exception as e:
 		print e
 ##################### get image from sources ###################################
 
-# Not the best/secure way to get the extension
+# Not the best/secure way to get/check the extension
 # Change in future to alternative method
 def get_ext(url):
 	parsed = urlparse(url)
@@ -100,7 +97,7 @@ def get_rand_img():
 		while True:
 				try:
 					reddit_url = reddit.subreddit('dogpictures+puppies+dogswearinghats').random().url
-					if "imgur.com" and "gfycat.com" and "youtube.com" not in reddit_url: #skip imgur and gfycat for now
+					if "imgur.com" and "gfycat.com" and "youtube.com" not in reddit_url: #skip imgur/gfycat/youtube for now
 					#if extension is not empty (poor way of checking... need to fix
 						img_filename, exten = download_img(reddit_url)
 						if img_filename and exten:
@@ -118,7 +115,7 @@ def get_rand_img():
 				resp = requests.get(url)
 				if resp.ok: #check response ok
 					jsondata = json.loads(resp.content)
-					img_filename, exten = download_img(jsondata['message'])
+					img_filename, exten = download_img(jsondata['message']) #download image (pass image url)
 					if exten and img_filename:
 						return img_filename #return filename of image
 			except Exception as e:
