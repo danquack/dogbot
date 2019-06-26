@@ -1,0 +1,11 @@
+os: osx
+before_install:
+  - brew install terraform
+  - brew upgrade python
+  - python3 -m pip install virtualenv awscli
+  - mkdir .virtualenv 
+  - virtualenv -p python3 -v .virtualenv
+script:
+  - terraform init
+  - terraform plan -out tfplan
+  - terraform apply tfplan
