@@ -16,6 +16,11 @@ resource "aws_lambda_function" "breed_lambda" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "breed_lambda" {
+  name = "/aws/lambda/${aws_lambda_function.breed_lambda.function_name}"
+}
+
 resource "aws_api_gateway_resource" "breed_resource" {
   path_part   = "{breed}"
   parent_id   = "${aws_api_gateway_resource.breed_list_resource.id}"

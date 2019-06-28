@@ -26,3 +26,27 @@ resource "aws_iam_role" "iam_for_lambda" {
 }
 EOF
 }
+data "aws_iam_policy_document" "lamdagw" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+       "logs:CreateLogStream",
+       "logs:PutLogEvents"
+    ]
+
+    resources = [
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "policy" {
+  name        = "lambda_allow_logging"
+  description = "A Policy to allow lambda to log"
+  policy = "${data.aws_iam_policy_document.lamdagw.json}"
+}
+resource "aws_iam_role_policy_attachment" "test-attach" {
+  role       = "${aws_iam_role.iam_for_lambda.name}"
+  policy_arn = "${aws_iam_policy.policy.arn}"
+}

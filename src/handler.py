@@ -5,10 +5,15 @@ from dog import get_rand_img, get_breed_img, breed_list
 def random(event, context):
     query_params = event.get('queryStringParameters', {})
     image = query_params.get('image', 'false').lower() if query_params else 'false'
-    return respond(
-        return_image=literal_eval(image.capitalize()),
-        response=get_rand_img()
-    )
+    
+    dog = get_rand_img()
+    if dog:
+        return respond(
+            return_image=literal_eval(image.capitalize()),
+            response=dog
+        )
+    else:
+        return random(event, context)
 
 def breed(event, context):
     response = get_rand_img()
@@ -16,11 +21,11 @@ def breed(event, context):
     query_params = event.get('queryStringParameters', {})
     image = query_params.get('image', 'false').lower() if query_params else 'false'
     
-    breed = get_breed_img(breed)
+    dog = get_breed_img(breed)
     if breed:
         return respond(
             return_image=literal_eval(image.capitalize()),
-            response=breed
+            response=dog
         )
     else:
         return {

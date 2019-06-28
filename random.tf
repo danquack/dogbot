@@ -16,6 +16,11 @@ resource "aws_lambda_function" "random_lambda" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "random_lambda" {
+  name = "/aws/lambda/${aws_lambda_function.random_lambda.function_name}"
+}
+
 resource "aws_api_gateway_resource" "random_resource" {
   path_part   = "random"
   parent_id   = "${aws_api_gateway_rest_api.api.root_resource_id}"
