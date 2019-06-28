@@ -49,5 +49,5 @@ resource "aws_lambda_permission" "apigw_lambda_breed_list" {
   action        = "lambda:InvokeFunction"
   function_name = "${aws_lambda_function.breeds_list_lambda.function_name}"
   principal     = "apigateway.amazonaws.com"
-  source_arn = "arn:aws:execute-api:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+  source_arn    = "arn:aws:execute-api:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
 }
