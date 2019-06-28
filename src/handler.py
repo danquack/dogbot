@@ -1,6 +1,18 @@
 from json import dumps
+from os import environ
 from ast import literal_eval
 from dog import get_rand_img, get_breed_img, breed_list
+
+
+def index(event, context):
+    return {
+            "statusCode": 301,
+            "headers": {
+                "Location": "//" + environ['domain'] + "/random?image=true",
+                "Cache-Control": "max-age=0"
+            }
+    }
+    
 
 def random(event, context):
     query_params = event.get('queryStringParameters', {})
