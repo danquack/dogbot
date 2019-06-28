@@ -1,7 +1,7 @@
 from json import dumps
 from os import environ
 from ast import literal_eval
-from dog import get_rand_img, get_breed_img, breed_list
+from dog import get_rand_img, get_breed_img, get_breed_list
 
 
 def index(event, context):
@@ -48,7 +48,7 @@ def breed(event, context):
 def breeds(event, context):
     return {
         "statusCode": 200,
-        "body": dumps({"breeds": breed_list})
+        "body": dumps({"breeds": get_breed_list()})
     }
 
 def respond(response, return_image):

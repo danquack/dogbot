@@ -10,10 +10,10 @@ import requests
 date = datetime.datetime.now().strftime("%m%d%Y-%H:%M:%S")
 
 
-########################## Read breeds.txt ###########################################
-with open("breeds.txt", "r") as f:
-    breed_list = f.read().splitlines()
-
+def get_breed_list():
+	response = requests.get("https://dog.ceo/api/breeds/list").json()
+	print(response)
+	return response['message']
 
 ##################### get image from sources ###################################
 # Not the best/secure way to get/check the extension
@@ -59,7 +59,7 @@ def get_rand_img():
 
 def get_breed_img(breed):
 	try:
-		if breed not in breed_list:
+		if breed not in get_breed_list():
 			raise Exception("Not a valid breed %s", breed)
 		breed_nospaces = breed.replace(" ","")
 		url = "https://dog.ceo/api/breed/" + breed_nospaces + "/images/random"
