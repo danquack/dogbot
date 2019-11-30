@@ -41,12 +41,36 @@ data "aws_iam_policy_document" "lamdagw" {
   }
 }
 
+data "aws_iam_policy_document" "decrypt" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+       "kms:Decrypt"
+    ]
+
+    resources = [
+      "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/${var.kms_key_id}"
+    ]
+  }
+}
+
 resource "aws_iam_policy" "policy" {
   name        = "lambda_allow_logging"
   description = "A Policy to allow lambda to log"
-  policy = "${data.aws_iam_policy_document.lamdagw.json}"
+  policy      = data.aws_iam_policy_document.lamdagw.json
 }
+resource "aws_iam_policy" "decrypt" {
+  name        = "lambda_allow_decrypt"
+  description = "Allow to decrypt lambda KMS key"
+  policy      = data.aws_iam_policy_document.decrypt.json
+}
+
 resource "aws_iam_role_policy_attachment" "test-attach" {
-  role       = "${aws_iam_role.iam_for_lambda.name}"
-  policy_arn = "${aws_iam_policy.policy.arn}"
+  role       = aws_iam_role.iam_for_lambda.name
+  policy_arn = aws_iam_policy.policy.arn
+}
+resource "aws_iam_role_policy_attachment" "decrypt" {
+  role       = aws_iam_role.iam_for_lambda.name
+  policy_arn = aws_iam_policy.decrypt.arn
 }
